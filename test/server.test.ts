@@ -101,8 +101,27 @@ test('credential/endpoint failures reveal no input and aborted requests do not r
   const controller = new AbortController()
   controller.abort()
   let count = 0
-  globalThis.fetch = async (_url, init) => { count++; assert.equal(init!.signal, controller.signal); throw new Error('aborted') }
+  // The 15s ceiling combines with the caller's signal rather than replacing it,
+  // so the signal reaching fetch is a distinct, already-aborted AbortSignal.
+  globalThis.fetch = async (_url, init) => { count++; assert.ok(init!.signal instanceof AbortSignal); assert.notEqual(init!.signal, controller.signal); assert.equal(init!.signal!.aborted, true); throw new Error('aborted') }
   const client = createClient({ ...settings, endpoint: 'http://127.0.0.1:8080' })
   assert.deepEqual(await client.funnels({ signal: controller.signal }), { ok: false, status: 0, error: 'network_error' })
   assert.equal(count, 1)
+})
+
+test('a caller signal adds to, and never removes, the 15-second request ceiling', async t => {
+  const old = globalThis.fetch
+  const signals: (AbortSignal | undefined)[] = []
+  globalThis.fetch = async (_url, init) => { signals.push(init?.signal); return new Response(null, { status: 204 }) }
+  t.after(() => { globalThis.fetch = old })
+  const client = createClient(settings)
+  const controller = new AbortController()
+  await client.funnels({ signal: controller.signal })
+  assert.ok(signals[0] instanceof AbortSignal)
+  assert.notEqual(signals[0], controller.signal)
+  assert.equal(signals[0]!.aborted, false)
+})
+
+test('the ./server browser entry throws at import time instead of shipping a server-only key client-side', async () => {
+  await assert.rejects(import('../dist/server.browser.js'), TypeError)
 })

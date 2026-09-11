@@ -39,7 +39,9 @@ The default `@jelto/analytics` export is the same browser entry. Identical repea
 initialization returns the same promise; conflicting options or an existing HTML
 installation fail before inserting another tracker. A failed script load remains
 latched until a page reload to prevent partial initialization from duplicating
-collection. Script URLs must end in `jelto.js` or `jelto.cookie.js`. Choosing the
+collection. Script URLs must end in `jelto.js` or `jelto.cookie.js`. An `http:`
+scriptUrl is accepted but is only safe on loopback/dev, since the browser's
+mixed-content blocking on an HTTPS page is the only defence against it. Choosing the
 cookie bundle is explicit; `memory: true` separately enables first-touch memory.
 Use `nonce` for nonce-based CSP. Managed proxy URLs and an explicit `endpoint`
 are supported.
@@ -65,6 +67,9 @@ const metadata = analytics.checkoutMetadata()
 // Pass declared cohort/entry group metadata to your server-side checkout.
 analytics.payment({ session_id: 'cs_returned_session' })
 ```
+
+Populating `payment()`'s optional `email` transmits the end user's email address
+from the browser to Jelto's attribution endpoint; only pass it when that is intended.
 
 The SDK orders cross-domain → core → goals → entry → checkout. Entry metadata
 contains a configured group ID, never the page path. Checkout memory defaults to

@@ -67,6 +67,12 @@ test('methods delegate to the existing global dispatcher and follow a later chec
   assert.equal('identify' in api, false)
 })
 
+test('a bad product or scriptUrl rejects the returned promise instead of throwing synchronously', async t => {
+  browser(t)
+  await assert.rejects(initialize({ ...settings, product: 'nope' }), TypeError)
+  await assert.rejects(initialize({ ...settings, scriptUrl: 'https://jelto.example/not-jelto.js' }), TypeError)
+})
+
 test('failed loading stays latched and existing installations never create a second collector', async t => {
   const { scripts, host } = browser(t)
   host.jelto = () => undefined

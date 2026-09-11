@@ -50,7 +50,8 @@ export function createClient(options: ServerOptions): ServerAnalytics {
       response = await fetch(url.href, {
         method, headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer',
-        signal: opts?.signal ?? AbortSignal.timeout(15000),
+        // A caller-supplied signal adds to, and never removes, the 15s ceiling.
+        signal: opts?.signal ? AbortSignal.any([opts.signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000),
       })
     } catch { return { ok: false, status: 0, error: 'network_error' } }
     let data: unknown = null

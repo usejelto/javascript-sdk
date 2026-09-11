@@ -5,7 +5,9 @@ export interface Attribution { cohort: string; first: boolean }
 export interface CheckoutMetadata { jelto_cohort?: string; jelto_jt?: 'first'; jelto_entry_page?: string }
 export interface EntryPageGroup { id: string; host: string; paths: string[] }
 export interface PaymentClaim {
-  session_id?: string; order_id?: string; checkout_id?: string; email?: string
+  session_id?: string; order_id?: string; checkout_id?: string
+  /** Populating this transmits the end user's email address from the browser to Jelto's attribution endpoint. */
+  email?: string
   provider?: 'stripe' | 'lemon_squeezy' | 'polar'; environment?: 'live' | 'test'
 }
 export interface BrowserOptions {
@@ -79,7 +81,11 @@ function configuration(options: BrowserOptions): { url: URL; attrs: Record<strin
  */
 export function initialize(options: BrowserOptions): Promise<BrowserAnalytics> {
   if (typeof window === 'undefined' || typeof document === 'undefined') return Promise.reject(new TypeError('Initialize Jelto in the browser after mounting'))
-  const { url, attrs, key } = configuration(options)
+  // Every failure path rejects the returned promise; a bad product or
+  // scriptUrl must not throw synchronously out of an async caller's await.
+  let parsed: { url: URL; attrs: Record<string, string>; key: string }
+  try { parsed = configuration(options) } catch (error) { return Promise.reject(error) }
+  const { url, attrs, key } = parsed
   const previous = installations.get(document)
   if (previous) {
     if (previous.key !== key) return Promise.reject(new TypeError('Jelto was initialized with different configuration'))
