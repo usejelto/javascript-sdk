@@ -9,7 +9,7 @@
   "bugs": {
     "url": "https://github.com/usejelto/javascript-sdk/issues"
   },
-  "homepage": "https://github.com/usejelto/javascript-sdk",
+  "homepage": "https://jelto.io/docs/sdk/analytics",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -50,5 +50,9 @@
   "devDependencies": {
     "@types/node": "^24.9.2",
     "typescript": "^5.9.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   }
 }
