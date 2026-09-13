@@ -4,15 +4,17 @@ Typed wrappers for Jelto's existing browser tracker and scoped server API. Both
 entry points can be imported during SSR without DOM, storage or network access.
 Node 22 or later is required for the server entry.
 
-## Install locally
+## Install
 
-Version 1.0.0 is prepared for release; registry publication is not yet available.
-From this package's source root, use Node.js 24 and run `npm ci` and
-`make package`. In the consuming application, install the resulting tarball:
+The package is published on npm as `@jelto/analytics`; releases are tagged in
+this repository. Install it in the consuming application:
 
 ```sh
-npm install /absolute/path/to/jelto-analytics-1.0.0.tgz
+npm install @jelto/analytics
 ```
+
+To build from source instead, use Node.js 24 and run `npm ci` and `make package`
+from this package's source root, then install the resulting tarball.
 
 See the [integration guide](https://jelto.io/docs/sdk/analytics) for setup.
 
@@ -145,8 +147,7 @@ Questions, bug reports and documentation improvements are welcome. See
 [Contributing](https://github.com/usejelto/javascript-sdk/blob/main/CONTRIBUTING.md),
 [Code of Conduct](https://github.com/usejelto/javascript-sdk/blob/main/CODE_OF_CONDUCT.md), and
 [Security policy](https://github.com/usejelto/javascript-sdk/blob/main/SECURITY.md).
-Until the public repository is available, these files are also included in the
-source root; contact [taha@jelto.io](mailto:taha@jelto.io) for help.
+Contact [taha@jelto.io](mailto:taha@jelto.io) for anything else.
 
 Jelto-owned software and associated documentation use the [MIT license](LICENSE).
 Third-party materials retain their own terms, including the Contributor Covenant
