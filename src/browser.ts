@@ -2,7 +2,7 @@
 export type Props = Record<string, string | number | boolean>
 export interface PageContext { active: boolean; pageviewId: string | null; url: string }
 export interface Attribution { cohort: string; first: boolean }
-export interface CheckoutMetadata { jelto_cohort?: string; jelto_jt?: 'first'; jelto_entry_page?: string }
+export interface CheckoutMetadata { jelto_cohort?: string; jelto_jt?: 'first'; jelto_entry_page?: string; jelto_pageview?: string }
 export interface EntryPageGroup { id: string; host: string; paths: string[] }
 export interface PaymentClaim {
   session_id?: string; order_id?: string; checkout_id?: string
