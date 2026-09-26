@@ -55,7 +55,7 @@ function sourceURL(value: string): URL {
 }
 
 function configuration(options: BrowserOptions): { url: URL; attrs: Record<string, string>; key: string } {
-  if (!/^prd_[a-z0-9]{10}$/.test(options.product)) throw new TypeError('A public Jelto product key is required')
+  if (!/^prd_[a-z0-9]{10}$/.test(options.product)) throw new TypeError('A Jelto product ID (prd_ followed by ten lowercase letters or digits) is required')
   const url = sourceURL(options.scriptUrl)
   const attrs: Record<string, string> = { product: options.product }
   if (options.endpoint !== undefined) attrs.endpoint = options.endpoint

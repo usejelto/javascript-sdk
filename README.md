@@ -37,6 +37,8 @@ analytics.pageview({ u: '/pricing' }) // optional; automatic pageviews are on
 const label = analytics.cohort()
 ```
 
+Replace `prd_8f3kq2m9x1` with your product ID, shown in **Settings → Overview**.
+
 The default `@jelto/analytics` export is the same browser entry. Identical repeated
 initialization returns the same promise; conflicting options or an existing HTML
 installation fail before inserting another tracker. A failed script load remains
@@ -98,12 +100,13 @@ const result = await jelto.stats({
 if (result.ok) console.log(result.data.total)
 ```
 
-Keep the `jk_` key on your server. `createClient` refuses browser execution and
+`apiKey` is a Jelto API key (`jk_…`) with the scopes listed below; keep it on
+your server. `createClient` refuses browser execution and
 requires HTTPS, except HTTP loopback during development. It omits cookies and
 referrers and refuses redirects. Requests default to a 15-second timeout; pass
 `{ signal }` to any method for caller-controlled cancellation.
 
-| Methods | Required key scope |
+| Methods | Required API key scope |
 | --- | --- |
 | `stats`, `realtime`, `health`, `events` | `analytics:read` |
 | `funnels` | `funnels:read` |
@@ -131,6 +134,12 @@ crawler reporting use the separate `@jelto/crawler` package.
 
 Run `npm ci`, `npm run check`, `npm run conformance` (twice for certification),
 and `npm pack --dry-run` to verify the package locally. Publication is separate.
+
+## Verify it works
+
+1. Deploy, then open a page of the published site in a normal browser tab; localhost, `file:` pages and automated browsers are excluded by default.
+2. In the Jelto dashboard, open **Settings → Installation**, select that hostname and choose **Check traffic**.
+3. The status shows **Receiving traffic**. For the server entry, a working call returns `result.ok === true`; otherwise read its `error`, `status` and `body`.
 
 ## Repository CI and releases
 

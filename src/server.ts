@@ -4,7 +4,7 @@ export type * from './types.js'
 export interface ServerOptions {
   endpoint: string
   product: string
-  /** A server-held jk_ key; this value is never sent to the browser entry. */
+  /** A server-held Jelto API key (jk_...); this value is never sent to the browser entry. */
   apiKey: string
 }
 export type APIResult<T> =
@@ -32,7 +32,7 @@ export function createClient(options: ServerOptions): ServerAnalytics {
     (endpoint.protocol !== 'https:' && !(endpoint.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(endpoint.hostname)))) {
     throw new TypeError('Jelto endpoint must be an HTTPS origin (HTTP loopback is allowed for development)')
   }
-  if (!/^prd_[a-z0-9]{10}$/.test(options.product)) throw new TypeError('A public Jelto product key is required')
+  if (!/^prd_[a-z0-9]{10}$/.test(options.product)) throw new TypeError('A Jelto product ID (prd_ followed by ten lowercase letters or digits) is required')
   if (!/^jk_[A-Za-z0-9_-]{43}$/.test(options.apiKey)) throw new TypeError('A server-held Jelto scoped API key is required')
   const product = options.product
   const key = options.apiKey
