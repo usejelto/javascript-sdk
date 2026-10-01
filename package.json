@@ -1,6 +1,6 @@
 {
   "name": "@jelto/analytics",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Typed browser tracker and scoped server API for Jelto",
   "repository": {
     "type": "git",
