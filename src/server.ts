@@ -7,10 +7,10 @@ export interface ServerOptions {
   /** A server-held Jelto API key (jk_...); this value is never sent to the browser entry. */
   apiKey: string
 }
-export type APIResult<T> =
-  | { ok: true; status: number; data: T }
-  | { ok: false; status: number; error: 'http_error' | 'network_error' | 'invalid_response'; body?: unknown; retryAfter?: string }
-export interface RequestOptions { signal?: AbortSignal }
+export type APIResult<T> = { ok: true; status: number; data: T } | { ok: false; status: number; error: 'http_error' | 'network_error' | 'invalid_response'; body?: unknown; retryAfter?: string }
+export interface RequestOptions {
+  signal?: AbortSignal
+}
 export interface ServerAnalytics {
   stats(params: StatsParams, options?: RequestOptions): Promise<APIResult<StatsResponse>>
   realtime(params?: RealtimeParams, options?: RequestOptions): Promise<APIResult<RealtimeResponse>>
@@ -27,9 +27,12 @@ export interface ServerAnalytics {
 export function createClient(options: ServerOptions): ServerAnalytics {
   if (typeof window !== 'undefined') throw new TypeError('Jelto server credentials belong on the server')
   let endpoint: URL
-  try { endpoint = new URL(options.endpoint) } catch { throw new TypeError('A Jelto API endpoint is required') }
-  if (endpoint.username || endpoint.password || endpoint.search || endpoint.hash || endpoint.pathname !== '/' ||
-    (endpoint.protocol !== 'https:' && !(endpoint.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(endpoint.hostname)))) {
+  try {
+    endpoint = new URL(options.endpoint)
+  } catch {
+    throw new TypeError('A Jelto API endpoint is required')
+  }
+  if (endpoint.username || endpoint.password || endpoint.search || endpoint.hash || endpoint.pathname !== '/' || (endpoint.protocol !== 'https:' && !(endpoint.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(endpoint.hostname)))) {
     throw new TypeError('Jelto endpoint must be an HTTPS origin (HTTP loopback is allowed for development)')
   }
   if (!/^prd_[a-z0-9]{10}$/.test(options.product)) throw new TypeError('A Jelto product ID (prd_ followed by ten lowercase letters or digits) is required')
@@ -48,18 +51,26 @@ export function createClient(options: ServerOptions): ServerAnalytics {
     let response: Response
     try {
       response = await fetch(url.href, {
-        method, headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-        credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer',
+        method,
+        headers,
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        credentials: 'omit',
+        redirect: 'error',
+        referrerPolicy: 'no-referrer',
         // A caller-supplied signal adds to, and never removes, the 15s ceiling.
         signal: opts?.signal ? AbortSignal.any([opts.signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000),
       })
-    } catch { return { ok: false, status: 0, error: 'network_error' } }
+    } catch {
+      return { ok: false, status: 0, error: 'network_error' }
+    }
     let data: unknown = null
     let invalid = false
     try {
       const text = await response.text()
       if (text) data = JSON.parse(text)
-    } catch { invalid = true }
+    } catch {
+      invalid = true
+    }
     if (!response.ok) {
       const retry = response.headers.get('Retry-After')
       return { ok: false, status: response.status, error: 'http_error', ...(!invalid && data !== null ? { body: data } : {}), ...(retry !== null ? { retryAfter: retry } : {}) }

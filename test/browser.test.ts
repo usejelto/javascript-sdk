@@ -6,16 +6,37 @@ import { initialize as defaultInitialize } from '@jelto/analytics'
 
 const settings = { product: 'prd_8f3kq2m9x1', scriptUrl: 'https://jelto.example/jelto.js' }
 class Script extends EventTarget {
-  src = ''; async = true; nonce = ''; dataset: Record<string, string> = {}
+  src = ''
+  async = true
+  nonce = ''
+  dataset: Record<string, string> = {}
 }
 function browser(t: { after(callback: () => void): void }) {
   const scripts: Script[] = []
   const host: Record<string, unknown> = {}
-  const doc = { createElement: () => new Script(), querySelector: () => null, head: { append: (element: Script) => { scripts.push(element) } } }
+  const doc = {
+    createElement: () => new Script(),
+    querySelector: () => null,
+    head: {
+      append: (element: Script) => {
+        scripts.push(element)
+      },
+    },
+  }
   Object.defineProperty(globalThis, 'window', { value: host, configurable: true })
   Object.defineProperty(globalThis, 'document', { value: doc, configurable: true })
-  t.after(() => { Reflect.deleteProperty(globalThis, 'window'); Reflect.deleteProperty(globalThis, 'document') })
-  return { scripts, host, doc, load: () => { for (const script of scripts) script.dispatchEvent(new Event('load')) } }
+  t.after(() => {
+    Reflect.deleteProperty(globalThis, 'window')
+    Reflect.deleteProperty(globalThis, 'document')
+  })
+  return {
+    scripts,
+    host,
+    doc,
+    load: () => {
+      for (const script of scripts) script.dispatchEvent(new Event('load'))
+    },
+  }
 }
 
 test('browser and server imports do no DOM, storage or network work during SSR', async () => {
@@ -31,7 +52,10 @@ test('identical initialization inserts one ordered tracker/helper set and confli
   const first = initialize(options)
   assert.equal(initialize({ ...options, product: settings.product }), first)
   await assert.rejects(initialize({ ...options, hash: true }), /different configuration/)
-  assert.deepEqual(scripts.map(script => new URL(script.src).pathname), ['/jelto.crossdomain.js', '/jelto.js', '/jelto.goals.js', '/jelto.entry.js', '/jelto.checkout.js'])
+  assert.deepEqual(
+    scripts.map(script => new URL(script.src).pathname),
+    ['/jelto.crossdomain.js', '/jelto.js', '/jelto.goals.js', '/jelto.entry.js', '/jelto.checkout.js'],
+  )
   assert.ok(scripts.every(script => script.async === false && script.nonce === 'csp-nonce'))
   assert.deepEqual(scripts[0]!.dataset, { product: settings.product, domains: 'site.example,shop.example' })
   assert.deepEqual(scripts[3]!.dataset, { product: settings.product })
@@ -39,7 +63,7 @@ test('identical initialization inserts one ordered tracker/helper set and confli
   assert.deepEqual(JSON.parse(scripts[4]!.dataset.entryPages!), options.checkout.entryPages)
   load()
   const api = await first
-  assert.equal((await initialize(options)), api)
+  assert.equal(await initialize(options), api)
   assert.deepEqual(api.checkoutMetadata(), {})
   assert.equal(api.context(), undefined)
 })
@@ -48,7 +72,10 @@ test('methods delegate to the existing global dispatcher and follow a later chec
   const { scripts, host, load } = browser(t)
   const ready = initialize({ ...settings, scriptUrl: 'https://proxy.example/analytics/jelto.cookie.js', endpoint: 'https://proxy.example/v1/e', autoPageview: false, spa: false, hash: true, exclude: ['/private/**'], allowLocalhost: true, memory: true })
   const calls: unknown[][] = []
-  host.jelto = (...args: unknown[]) => { calls.push(args); return args[0] === 'cohort' ? 'launch' : args[0] === 'context' ? { active: true, pageviewId: null, url: '' } : { cohort: 'launch', first: false } }
+  host.jelto = (...args: unknown[]) => {
+    calls.push(args)
+    return args[0] === 'cohort' ? 'launch' : args[0] === 'context' ? { active: true, pageviewId: null, url: '' } : { cohort: 'launch', first: false }
+  }
   load()
   const api = await ready
   api.pageview({ u: '/pricing' })
@@ -56,7 +83,9 @@ test('methods delegate to the existing global dispatcher and follow a later chec
   assert.equal(api.cohort(), 'launch')
   assert.deepEqual(api.context(), { active: true, pageviewId: null, url: '' })
   assert.deepEqual(api.attribution(), { cohort: 'launch', first: false })
-  host.jelto = (...args: unknown[]) => { calls.push(['wrapped', ...args]) }
+  host.jelto = (...args: unknown[]) => {
+    calls.push(['wrapped', ...args])
+  }
   host.jeltoCheckoutMetadata = () => ({ jelto_cohort: 'launch', jelto_entry_page: 'pricing' })
   api.payment({ session_id: 'cs_verified_return' })
   assert.deepEqual(api.checkoutMetadata(), { jelto_cohort: 'launch', jelto_entry_page: 'pricing' })

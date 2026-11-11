@@ -1,14 +1,33 @@
 /** Importing this module is safe during SSR. Only initialize touches the DOM. */
 export type Props = Record<string, string | number | boolean>
-export interface PageContext { active: boolean; pageviewId: string | null; url: string }
-export interface Attribution { cohort: string; first: boolean }
-export interface CheckoutMetadata { jelto_cohort?: string; jelto_jt?: 'first'; jelto_entry_page?: string; jelto_pageview?: string }
-export interface EntryPageGroup { id: string; host: string; paths: string[] }
+export interface PageContext {
+  active: boolean
+  pageviewId: string | null
+  url: string
+}
+export interface Attribution {
+  cohort: string
+  first: boolean
+}
+export interface CheckoutMetadata {
+  jelto_cohort?: string
+  jelto_jt?: 'first'
+  jelto_entry_page?: string
+  jelto_pageview?: string
+}
+export interface EntryPageGroup {
+  id: string
+  host: string
+  paths: string[]
+}
 export interface PaymentClaim {
-  session_id?: string; order_id?: string; checkout_id?: string
+  session_id?: string
+  order_id?: string
+  checkout_id?: string
   /** Populating this transmits the end user's email address from the browser to Jelto's attribution endpoint. */
   email?: string
-  provider?: 'stripe' | 'lemon_squeezy' | 'polar'; environment?: 'live' | 'test'
+  provider?: 'stripe' | 'lemon_squeezy' | 'polar'
+  environment?: 'live' | 'test'
 }
 export interface BrowserOptions {
   product: string
@@ -47,7 +66,11 @@ const installations = new WeakMap<Document, Installation>()
 
 function sourceURL(value: string): URL {
   let url: URL
-  try { url = new URL(value) } catch { throw new TypeError('Jelto scriptUrl must be an absolute HTTP(S) URL') }
+  try {
+    url = new URL(value)
+  } catch {
+    throw new TypeError('Jelto scriptUrl must be an absolute HTTP(S) URL')
+  }
   if (!/^https?:$/.test(url.protocol) || url.username || url.password || url.search || url.hash || !/\/jelto(?:\.cookie)?\.js$/.test(url.pathname)) {
     throw new TypeError('Jelto scriptUrl must end in jelto.js or jelto.cookie.js without credentials, query or fragment')
   }
@@ -69,8 +92,7 @@ function configuration(options: BrowserOptions): { url: URL; attrs: Record<strin
   // Construct every field in a stable order; object insertion order supplied by
   // callers must not make an otherwise identical initialization conflict.
   const groups = options.checkout?.entryPages?.map(group => [group.id, group.host, group.paths]) ?? []
-  const key = JSON.stringify([url.href, attrs, !!options.goals, options.domains ?? [],
-    !!options.checkout, options.checkout?.memory !== false, options.checkout?.environment ?? 'live', groups, options.nonce ?? ''])
+  const key = JSON.stringify([url.href, attrs, !!options.goals, options.domains ?? [], !!options.checkout, options.checkout?.memory !== false, options.checkout?.environment ?? 'live', groups, options.nonce ?? ''])
   return { url, attrs, key }
 }
 
@@ -84,7 +106,11 @@ export function initialize(options: BrowserOptions): Promise<BrowserAnalytics> {
   // Every failure path rejects the returned promise; a bad product or
   // scriptUrl must not throw synchronously out of an async caller's await.
   let parsed: { url: URL; attrs: Record<string, string>; key: string }
-  try { parsed = configuration(options) } catch (error) { return Promise.reject(error) }
+  try {
+    parsed = configuration(options)
+  } catch (error) {
+    return Promise.reject(error)
+  }
   const { url, attrs, key } = parsed
   const previous = installations.get(document)
   if (previous) {
@@ -104,10 +130,12 @@ export function initialize(options: BrowserOptions): Promise<BrowserAnalytics> {
     element.async = false
     if (options.nonce) element.nonce = options.nonce
     for (const [name, value] of Object.entries(data)) element.dataset[name] = value
-    loads.push(new Promise<void>((resolve, reject) => {
-      element.addEventListener('load', () => resolve(), { once: true })
-      element.addEventListener('error', () => reject(new Error('A Jelto script could not be loaded')), { once: true })
-    }))
+    loads.push(
+      new Promise<void>((resolve, reject) => {
+        element.addEventListener('load', () => resolve(), { once: true })
+        element.addEventListener('error', () => reject(new Error('A Jelto script could not be loaded')), { once: true })
+      }),
+    )
     scripts.push(element)
   }
   if (options.domains?.length) script('jelto.crossdomain.js', { product: options.product, domains: options.domains.join(',') })
@@ -122,15 +150,23 @@ export function initialize(options: BrowserOptions): Promise<BrowserAnalytics> {
   }
   const host = window as TrackerWindow
   const call: API = (command, ...args) => host.jelto?.(command, ...args)
-  const ready = Promise.all(loads).then((): BrowserAnalytics => Object.freeze({
-    pageview: (value?: { u?: string; r?: string }) => { call('pageview', value) },
-    track: (name: string, props?: Props, eventOptions?: { interactive?: boolean }) => { call('event', name, props, eventOptions) },
-    cohort: () => call('cohort') as string | undefined,
-    attribution: () => call('attribution') as Attribution | undefined,
-    context: () => call('context') as PageContext | undefined,
-    checkoutMetadata: () => host.jeltoCheckoutMetadata?.() ?? {},
-    payment: (claim: PaymentClaim) => { call('payment', claim) },
-  }))
+  const ready = Promise.all(loads).then((): BrowserAnalytics =>
+    Object.freeze({
+      pageview: (value?: { u?: string; r?: string }) => {
+        call('pageview', value)
+      },
+      track: (name: string, props?: Props, eventOptions?: { interactive?: boolean }) => {
+        call('event', name, props, eventOptions)
+      },
+      cohort: () => call('cohort') as string | undefined,
+      attribution: () => call('attribution') as Attribution | undefined,
+      context: () => call('context') as PageContext | undefined,
+      checkoutMetadata: () => host.jeltoCheckoutMetadata?.() ?? {},
+      payment: (claim: PaymentClaim) => {
+        call('payment', claim)
+      },
+    }),
+  )
   // Keep a failed initialization latched: retrying a partly loaded core would
   // risk duplicate pageviews/listeners. The caller can reload to try again.
   installations.set(document, { key, ready })
