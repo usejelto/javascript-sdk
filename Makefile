@@ -4,6 +4,13 @@
 # The shared quality targets (hooks, tools, secrets, osv, workflow-audit, sast)
 # arrive from the contracts repository as a checksummed snapshot; `make inputs`
 # in the backend refreshes it, and nothing edits it here.
+# sast: the community rules for TypeScript, JavaScript and browser code (the
+# `.` and `./browser` entry runs in a page), and the Unicode (bidirectional
+# text) rule for every file. The repository's own rules and their test cases
+# are in .opengrep/.
+QUALITY_COMMUNITY_RULES := typescript/lang/security typescript/lang/correctness \
+	javascript/lang/security javascript/lang/correctness javascript/browser/security \
+	generic/unicode/security
 include vendor/quality/quality.mk
 
 node_modules: package.json package-lock.json
@@ -43,7 +50,7 @@ boundaries: node_modules build
 # Conformance runs twice beside it in CI, as before.
 check: lint deadcode boundaries test build package security
 
-security: secrets workflow-audit osv npm-audit
+security: secrets workflow-audit osv npm-audit sast
 
 npm-audit:
 	npm audit --audit-level=moderate --package-lock-only

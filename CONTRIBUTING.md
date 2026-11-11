@@ -55,8 +55,9 @@ The security targets run separate programs, not project dependencies.
 downloads and verifies it into `~/.cache/jelto-tools` (`JELTO_TOOLS_DIR`
 overrides the location), and `make tools` installs them all ahead of time.
 `vendor/quality/` is a checksummed snapshot of the contracts repository's
-`tools/quality/`; change it there, not here. ESLint, Knip and dependency-cruiser are
-development dependencies, pinned by `package-lock.json`.
+`tools/quality/`; change it there, not here. ESLint, Knip and
+dependency-cruiser are development dependencies, pinned by
+`package-lock.json`.
 
 | Target | Tool | What it checks |
 |---|---|---|
@@ -67,6 +68,7 @@ development dependencies, pinned by `package-lock.json`.
 | `make workflow-audit` | actionlint, zizmor | workflow syntax, script injection, permissions and pinning |
 | `make osv` | OSV-Scanner | `package-lock.json` against the OSV database, downloaded and matched locally |
 | `make npm-audit` | npm audit | `package-lock.json` against the npm advisory database |
+| `make sast` | opengrep | the community TypeScript, JavaScript, browser and Unicode rules, and the repository's own rules in `.opengrep/` (no client-address header is read; contracts come from `JELTO_CONTRACTS_DIR`), each tested against its test file |
 
 When a check reports something, fix a real problem in the same change. A
 deliberate exception, or a finding the tool got wrong, is marked at the one
@@ -80,7 +82,9 @@ place it applies, with the reason beside it:
 - Knip: an entry in `knip.config.ts` for a file or dependency a tool loads
   without an import, with the reason in a comment;
 - dependency-cruiser: a `pathNot` on the one rule and path it concerns, with
-  the reason in the rule's comment.
+  the reason in the rule's comment;
+- opengrep: `// nosemgrep: <rule-id> -- <reason>` at the end of the finding's
+  first line.
 
 Never disable a rule, a file or a directory wholesale, and never relax a
 threshold to make a check pass.

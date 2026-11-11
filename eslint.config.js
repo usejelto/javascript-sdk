@@ -11,8 +11,9 @@ export default ts.config(
   js.configs.recommended,
   ts.configs.recommended,
   {
-    // Configuration that runs in Node.js.
-    files: ['*.config.js', '*.config.ts'],
+    // Configuration that runs in Node.js, and the opengrep rule test cases,
+    // written as Node modules.
+    files: ['.opengrep/**', '*.config.js', '*.config.ts'],
     languageOptions: { globals: { ...globals.node } },
   },
   {
