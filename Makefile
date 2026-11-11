@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := test
-.PHONY: build test conformance package security check npm-audit lint deadcode
+.PHONY: build test conformance package security check npm-audit lint deadcode boundaries
 
 # The shared quality targets (hooks, tools, secrets, osv, workflow-audit, sast)
 # arrive from the contracts repository as a checksummed snapshot; `make inputs`
@@ -32,9 +32,16 @@ lint: node_modules
 # dependencies, and dependencies used but not declared.
 deadcode: node_modules knip
 
+# dependency-cruiser (.dependency-cruiser.cjs): no cycles, no unresolved
+# import, shipped code uses only `dependencies`, and the browser and server
+# entry points stay apart. The tests import the built package, so it builds
+# first.
+boundaries: node_modules build
+	npx --no-install depcruise src test --config .dependency-cruiser.cjs
+
 # The whole gate: what to run before a pull request, and what CI runs.
 # Conformance runs twice beside it in CI, as before.
-check: lint deadcode test build package security
+check: lint deadcode boundaries test build package security
 
 security: secrets workflow-audit osv npm-audit
 
